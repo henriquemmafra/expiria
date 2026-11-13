@@ -14,6 +14,8 @@ Aplicativo web para interpretação assistida de espirometria, volumes pulmonare
 - Difusão por monóxido de carbono (DLCO, VA, KCO) com equações **da tabela original** Guimarães et al. 2019; opção de ajustar o previsto por hemoglobina segundo ERS/ATS e converter SI/tradicional.
 - Resistência por pletismografia (Raw, sRaw, Gaw e sGaw) e oscilometria (R5, R20, R5–R20, X5, AX e Fres), com interpretação por limites fornecidos pelo laboratório; nenhuma equação de resistência é presumida.
 - Sugestão de laudo único integrada aos módulos presentes, com alertas de dados contraditórios e aviso de referências incompletas.
+- **Fotografar o exame pelo celular**: botão de câmera (aparece em telas de toque) com pré-processamento da imagem (escala, tons de cinza, contraste) antes do OCR. O parser reconstrói vírgulas decimais perdidas pela faixa plausível de cada parâmetro e avisa quais campos foram reconstruídos; linhas incoerentes (LIN acima do previsto, números colados) são recusadas e listadas, nunca preenchidas.
+- **Gráfico de resultados** em % do previsto, com faixa LIN–LSN e marcadores pré/pós-BD para espirometria, volumes, DLCO e resistência; incluído na impressão. Não reconstrói curvas fluxo-volume/volume-tempo, que dependem do sinal bruto do equipamento.
 - Sugestão editável, copiar, baixar TXT, imprimir/salvar PDF pelo navegador.
 
 ## Limitações

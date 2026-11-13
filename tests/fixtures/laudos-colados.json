@@ -90,5 +90,13 @@
  [
   "23 Linha sem cabeçalho (deve ser recusada)",
   "VEF1 3,32 2,50 2,00 2,40\nCVF 4,20 3,20 3,50 3,65"
+ ],
+ [
+  "24 Foto de celular lida por OCR (vírgulas perdidas, rótulos trocados, ruído de margem)",
+  "LABORATORIO DE FUNGAO PULMONAR\nNome: Fulano de Tal Sexo: Masculino dade: 50 anos                           !\n~ Altura: 175 cm Peso: 70 kg Data do exame: 10/11/2026                             :\nHb: 12,0 g/dL                                             ;\nESPIROMETRIA                                            ;\nParametro Pré-BD %Prev Pos-BD %Prev Vard Previsto LIN\nCVF() 310 68 330 73 6 455 360\nVEF1 (L) 190 52 215 59 13 362 285\nVEFUCVF 61   65    80  69\nPFE (Us) 5.10 57 560 63 10 890 680\nVOLUMES PULMONARES (Pletismografia)\nparametro Medido Previsto LIN LSN %Prev\nCPT(L) 740 677 572 7,85 109\nVR(L) 360 204 142 2,72 176\nVRICPT (%) 49 30 22 38 163                                   \\\nCRF(L) 490 352 263 4,37 139\nParametro     Medido Previsto LIN                                                          =\nDLCO SB (mUmin/mmHg) 150 28.6 236                             is\nVA(L)   6,10 617 517                              4\nDLCONA   246 408 326                             E\nfat\n&\nPEELE alien REE                      yy\n"
+ ],
+ [
+  "25 Segunda leitura OCR da mesma foto (números colados, pontuação solta)",
+  "LABORATORIO DE FUNGAO PULMONAR                             :\n\nNome: Fulano de Tal Sexo: Masculino \\dade: 50 anos            :\n\nAltura: 175 cm Peso: 70 kg Data do exame: 10/11/2026\n\nHb: 12,0 g/dL\n\nEquagdes: GLI 2012\nESPIROMETRIA\n\nParametro Pré-BD %Prev Pos-BD %Prev Var% Previsto LIN\n\nCVF) 310 68 330 73 6 455 360\n\nVEF1 (L) 190 52 215 59 13 362 285\n\nVEFUCVF 61   65    80 69\n\nPFE(Us) 510 57 560 63 10 890 680                             ;\nVOLUMES PULMONARES (Pletismografia)\n\npardmetro Medido Previsto LIN LSN %Prev\n\nCPT(L) 740 677 572785109\n\nVR() 360 204 142272176\nVRICPT(%) 49 30 22 38 163\n\nCRF(L) 490 352 263437139\nParametro   Medido Previsto LIN                                     2\nDLCO SB (mUmin/mmHg) 15.0 286 23.6                              i\nVA(L)   610 617 517\nDLCONA   246 408 326                             a\nBE EE Br ors i Os   En a yy\n\n"
  ]
 ]

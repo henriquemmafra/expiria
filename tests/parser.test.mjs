@@ -71,3 +71,37 @@ test('frase com número após o cabeçalho não substitui as colunas', () => {
   const s = parseExam('Parametro Previsto LIN Pre Pos\nTeste pre e pos BD com 400 mcg\nVEF1 3,32 2,50 2,00 2,40').spirometry;
   assert.equal(s.fev1.post, 2.4);
 });
+test('foto de celular (OCR): vírgulas reconstruídas, rótulos corrigidos, ruído descartado', () => {
+  const p = parseExam(cases['24']);
+  assert.deepEqual(p.spirometry.fvc, {pre: 3.1, post: 3.3, pred: 4.55, lln: 3.6});
+  assert.deepEqual(p.spirometry.fev1, {pre: 1.9, post: 2.15, pred: 3.62, lln: 2.85});
+  assert.equal(p.spirometry.ratio.lln, 69);
+  assert.deepEqual(p.volumes.tlc, {measured: 7.4, pred: 6.77, lln: 5.72, uln: 7.85});
+  assert.equal(p.volumes.rvtlc.measured, 49);
+  assert.deepEqual(p.diffusion.dlco, {measured: 15, pred: 28.6, lln: 23.6});
+  assert.deepEqual(p.diffusion.va, {measured: 6.1, pred: 6.17, lln: 5.17});
+  assert.deepEqual(p.diffusion.kco, {measured: 2.46, pred: 4.08, lln: 3.26});
+  assert.ok(p.inferred.includes('fev1') && p.inferred.includes('dlco'));
+  assert.equal(p.demographics.age, 50);
+  assert.equal(p.skipped.length, 0);
+});
+test('valores já plausíveis não são alterados pela reconstrução de vírgula', () => {
+  const p = parseExam('Parametro Medido Previsto LIN\nDLCO 18 27 22\nCPT 6 7 5');
+  assert.equal(p.diffusion.dlco.measured, 18); assert.equal(p.volumes.tlc.measured, 6); assert.deepEqual(p.inferred, []);
+});
+test('OCR com números colados: linhas irrecuperáveis são recusadas, o resto é lido', () => {
+  const p = parseExam(cases['25']);
+  assert.deepEqual(p.spirometry.fvc, {pre: 3.1, post: 3.3, pred: 4.55, lln: 3.6});
+  assert.deepEqual(p.diffusion.dlco, {measured: 15, pred: 28.6, lln: 23.6});
+  assert.equal(p.volumes.tlc, undefined);
+  assert.ok(p.skipped.some(l => l.startsWith('CPT')));
+});
+test('mL sem unidade (4 dígitos) vira litros e é sinalizado', () => {
+  const p = parseExam(cases['14']);
+  assert.deepEqual(p.spirometry.fev1, {pred: 3.32, lln: 2.5, pre: 2, post: 2.4});
+  assert.ok(p.inferred.includes('fev1'));
+});
+test('linha com LIN acima do previsto (números colados no OCR) é recusada', () => {
+  const p = parseExam('Parametro Medido Previsto LIN LSN\nVR 3,60 2,04 142272 1,76');
+  assert.equal(p.volumes.rv, undefined); assert.equal(p.skipped.length, 1);
+});

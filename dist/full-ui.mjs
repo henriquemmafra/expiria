@@ -1,5 +1,6 @@
 import {analyzeFull,brazilReferences,PARAMETERS} from './full-function.mjs';
 import {interpret as interpretSpirometry} from './clinical.mjs';
+import {chartRows,chartSVG} from './chart.mjs';
 const $=id=>document.getElementById(id);
 const nval=id=>{const v=$(id)?.value.trim();return v?Number(v.replace(',','.')):null;};
 const fmt=(n,k=2)=>typeof n==='number'&&Number.isFinite(n)?n.toFixed(k).replace('.',','):'—';
@@ -148,8 +149,15 @@ function generate(){
  $('report-panel').hidden=false;$('report-panel').scrollIntoView({behavior:'smooth'});
  $('report-status').textContent='Revise as limitações e confirme o exame original.';
 }
-$('full-generate').onclick=generate;
+function drawChart(){
+ const s=spiroData(),pred=Number($('ratio-lln').dataset.pred);if(Number.isFinite(pred)&&pred>0)s.ratio.pred=pred;
+ $('chart-wrap').hidden=false;const width=$('chart').clientWidth||760;
+ const full=fullAnalysis(),svg=chartSVG(chartRows(s,full.hasData&&!full.errors.length?full:null,PARAMETERS),{width});
+ $('chart').innerHTML=svg;$('chart-wrap').hidden=!svg;
+}
+$('full-generate').onclick=()=>{generate();if(!$('report-panel').hidden)drawChart();};
 $('interpret').addEventListener('click',()=>{
+ if(!$('report-panel').hidden)drawChart();
  const r=fullAnalysis();if(!r.hasData)return;
  if(r.errors.length){$('report').value+='\n\nATENÇÃO: resultados complementares omitidos por inconsistências numéricas: '+r.errors.join(' ');return;}
  $('report').value+=appendix(r);addCard(r);
