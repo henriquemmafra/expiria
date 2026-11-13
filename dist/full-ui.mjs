@@ -100,7 +100,7 @@ function invalidate(){
 }
 function lines(rows){
  return rows.filter(r=>Number.isFinite(r.measured)).map(r=>{
-  const status={low:'abaixo do LIN',high:'acima do LSN',normal:'dentro dos limites',unclassified:'não classificável',absent:'não informado'}[r.status];
+  const status=r.status==='normal'?(Number.isFinite(r.lln)&&Number.isFinite(r.uln)?'dentro dos limites informados':Number.isFinite(r.lln)?'não abaixo do LIN':Number.isFinite(r.uln)?'não acima do LSN':'não classificável'):{low:'abaixo do LIN',high:'acima do LSN',unclassified:'não classificável',absent:'não informado'}[r.status];
   return PARAMETERS[r.key][0]+': '+fmt(r.measured)+' '+PARAMETERS[r.key][1]+
    '; previsto '+fmt(r.pred)+(r.percentPred!=null?' ('+fmt(r.percentPred,1)+'% do previsto)':'')+
    '; LIN '+fmt(r.lln)+'; LSN '+fmt(r.uln)+' — '+status+(r.derived?' [calculado de parâmetros medidos]':'')+'.';
@@ -128,6 +128,7 @@ function addCard(r){
  card.append(span,strong);$('result-cards').append(card);
 }
 function generate(){
+ if(!$('confirmed').checked){$('full-extract-status').textContent='Confira os valores e assinale a confirmação antes de gerar o laudo.';return;}
  const r=fullAnalysis(),spi=interpretSpirometry(spiroData());
  const invalid=[...container.querySelectorAll('input')].filter(x=>x.value.trim()&&(!Number.isFinite(Number(x.value.trim().replace(',','.')))||x.type==='number'&&(x.validity.rangeOverflow||x.validity.rangeUnderflow)));
  if(invalid.length){$('full-extract-status').textContent='Corrigir campos numéricos inválidos: '+invalid.map(x=>x.getAttribute('aria-label')||x.id).join(', ');return;}
@@ -147,7 +148,8 @@ function generate(){
 }
 $('full-generate').onclick=generate;
 $('interpret').addEventListener('click',()=>{
- const r=fullAnalysis();if(!r.hasData||r.errors.length)return;
+ const r=fullAnalysis();if(!r.hasData)return;
+ if(r.errors.length){$('report').value+='\n\nATENÇÃO: resultados complementares omitidos por inconsistências numéricas: '+r.errors.join(' ');return;}
  $('report').value+=appendix(r);addCard(r);
 });
 function extract(){
