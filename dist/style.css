@@ -23,3 +23,5 @@ header{height:110px;background:#fff}.brand-symbol{width:65px;height:63px;object-
 .full-actions span{font-size:11px;color:var(--muted)}
 .full-details tr[hidden]{display:none!important}
 @media(max-width:650px){.full-meta{grid-template-columns:1fr 1fr}.full-details{padding:11px}.full-details td:first-child{min-width:100px}.full-details td input{min-width:69px;font-size:11px}.full-meta label{font-size:11px}}
+
+.exam-composer{margin-top:20px;border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff}.exam-composer:focus-within{border-color:#24afa1;box-shadow:0 0 0 3px #24afa116}.exam-composer label{font-weight:600;margin:0 0 8px}.exam-composer textarea{border:0;background:transparent;padding:4px;min-height:130px;margin:0;outline:none}.exam-composer p{font-size:11px;line-height:1.6;margin:8px 0 0}.exam-composer #preview{max-height:260px;border-radius:10px}.exam-composer .file-caption{margin-top:8px}
