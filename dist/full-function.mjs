@@ -195,8 +195,7 @@ export function analyzeFull(input={}){
 }
 export function parseSupplement(text,mode='auto'){
  const defs=[
-  ['tlc',/^(?:cpt|tlc)\b/i],['rv',/^(?:vr|rv)\b/i],['frc',/^(?:crf|frc|f r c)\b/i],['erv',/^(?:vre|erv)\b/i],['ic',/^(?:ci|ic)\b/i],['vc',/^(?:cv(?:\s+lenta)?|svc)\b/i],
-  ['rvtlc',/^(?:vr\s*\/\s*cpt|rv\s*\/\s*tlc)\b/i],
+  ['tlc',/^(?:cpt|tlc)\b/i],['rvtlc',/^(?:vr\s*\/\s*cpt|rv\s*\/\s*tlc)\b/i],['rv',/^(?:vr|rv)\b/i],['frc',/^(?:crf|frc|f r c)\b/i],['erv',/^(?:vre|erv)\b/i],['ic',/^(?:ci|ic)\b/i],['vc',/^(?:cv(?:\s+lenta)?|svc)\b/i],
   ['dlco',/^(?:dlco|dco|tlco)\b/i],['va',/^(?:va|volume\s+alveolar)\b/i],['kco',/^(?:kco)\b/i],
   ['raw',/^raw\b/i],['sraw',/^sraw\b/i],['gaw',/^gaw\b/i],['sgaw',/^sgaw\b/i],
   ['r5r20',/^r5\s*[-–]\s*r20\b/i],['r5',/^r5\b/i],['r20',/^r20\b/i],
