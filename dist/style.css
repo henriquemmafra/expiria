@@ -5,3 +5,21 @@
 header{height:110px;background:#fff}.brand-symbol{width:65px;height:63px;object-fit:contain}.brand-lockup{display:flex;flex-direction:column;gap:0}.brand-name{font-size:43px;font-weight:600;letter-spacing:-2.4px;line-height:1.1}.brand-tagline{font-size:12px;font-weight:400;letter-spacing:.1px;line-height:1.7}.panel{box-shadow:0 6px 24px #073c4606;border-radius:18px}.dropzone{padding:34px 16px}.dropzone h3{font-size:21px;font-weight:600;letter-spacing:-.5px}.upload-icon{width:45px;height:45px;background:none;border-radius:0}.upload-icon svg{width:36px;height:36px}.primary{background:#073c46}.primary:hover{background:#0b515b}.pill{color:#16776e}#paste-image{margin-top:0;background:#f7fbfb}label[for="paste-image"]{margin:20px 0 8px}#paste-instructions{font-size:11px;line-height:1.6}.footer-dot{color:#24afa1}footer a{color:#3d737a}@media(max-width:600px){header{height:91px}.brand-symbol{width:47px;height:48px}.brand-name{font-size:33px}.brand-tagline{font-size:10px}.brand{gap:6px}header .quiet{font-size:11px;padding:10px}h1{font-size:37px}}
 
 .intro .eyebrow{display:block;margin-bottom:14px}
+
+/* Módulos completos: visual alinhado à identidade Expiria */
+.full-panel{margin-top:22px}
+.full-panel>p{font-size:12px;line-height:1.65}
+.full-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 16px}
+.full-meta label{margin-bottom:4px}
+.full-meta input,.full-meta select{min-height:41px}
+.full-details{margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fbfdfd}
+.full-details summary{font:600 16px Manrope,sans-serif;color:var(--ink);padding:4px 2px;cursor:pointer}
+.full-details .table-wrap{padding-top:14px}
+.full-details td:first-child{min-width:125px}
+.full-details td input{min-width:74px}
+.full-details .full-auto-ref{max-width:140px;white-space:normal;color:#218379}
+.full-help{padding:12px 14px;background:#eff7f6;border-radius:8px;color:#44696c;font-size:11px!important;line-height:1.7}
+.full-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:20px 0}
+.full-actions span{font-size:11px;color:var(--muted)}
+.full-details tr[hidden]{display:none!important}
+@media(max-width:650px){.full-meta{grid-template-columns:1fr 1fr}.full-details{padding:11px}.full-details td:first-child{min-width:100px}.full-details td input{min-width:69px;font-size:11px}.full-meta label{font-size:11px}}
