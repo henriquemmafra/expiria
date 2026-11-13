@@ -1,5 +1,7 @@
 # Expiria
 
+**Análises espirométricas.** Identidade visual em azul-petróleo, turquesa e verde-menta, com símbolo vetorial de fluxo respiratório.
+
 Aplicativo web para leitura e interpretação assistida de espirometrias. Versão inicial para validação médica.
 
 ## Recursos
