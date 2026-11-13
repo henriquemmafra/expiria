@@ -19,6 +19,7 @@ container.innerHTML=[
  '<label>Técnica de volumes<select id="full-method"><option value="pleth">Pletismografia</option><option value="gas">Diluição/lavagem de gases</option><option value="other">Outra / não informada</option></select></label>',
  '<label>Hemoglobina na DLCO<select id="full-hbmode"><option value="none">Não aplicar automaticamente</option><option value="predicted">Medida sem correção: ajustar o previsto pela Hb</option><option value="already">Medida já corrigida no equipamento</option></select></label>',
  '<label>Unidade da DLCO/KCO<select id="full-dlco-unit"><option value="traditional">mL/min/mmHg (tradicional)</option><option value="si">mmol/min/kPa (SI)</option></select></label>',
+ '<label>Qualidade dos exames complementares<select id="full-quality"><option value="unknown">Ainda não verificada</option><option value="verified">Conferida por profissional habilitado</option><option value="limited">Exame tecnicamente limitado</option></select></label>',
  '<label>Método de resistência<select id="full-resmethod"><option value="pleth">Pletismografia · Raw/sRaw/Gaw/sGaw</option><option value="osc">Oscilometria · R5/R20/X5/AX/Fres</option></select></label>',
  '</div><p id="full-ref-info" class="full-help" role="status"></p><div id="full-tables"></div>',
  '<div class="full-actions"><button id="full-extract">Extrair dados complementares do texto</button><span id="full-extract-status" role="status">Somente tabelas com cabeçalhos reconhecidos.</span></div>',
@@ -83,7 +84,7 @@ function spiroData(){
 function fullAnalysis(){
  return analyzeFull({...sourceData(),demographics:demographics(),settings:{
   reference:$('full-reference').value,volumeMethod:$('full-method').value,
-  hbMode:$('full-hbmode').value,resistanceMethod:$('full-resmethod').value
+  hbMode:$('full-hbmode').value,resistanceMethod:$('full-resmethod').value,quality:$('full-quality').value
  },spirometry:interpretSpirometry(spiroData())});
 }
 function markEdited(){$('confirmed').checked=false;$('interpret').disabled=true;}
@@ -108,6 +109,7 @@ function lines(rows){
 }
 function appendix(r){
  let report='';
+ if(r.hasData)report+='\n\nQUALIDADE DOS EXAMES COMPLEMENTARES\n'+$('full-quality').selectedOptions[0].text+'.';
  if(r.hasVolumes)report+='\n\nVOLUMES PULMONARES\nMétodo: '+$('full-method').selectedOptions[0].text+'\n'+lines(r.volumes);
  if(r.hasDiffusion){
   report+='\n\nDIFUSÃO PULMONAR — DLCO\n'+lines(r.diffusion);
@@ -168,7 +170,7 @@ new MutationObserver(()=>{
  const value=$('source').value;
  if(value&&value!==lastSource){lastSource=value;if(parseSupplement(value).count)extract();}
 }).observe($('status'),{childList:true,subtree:true,characterData:true});
-for(const id of ['full-sex','full-age','full-height','full-weight','full-hb','full-reference','full-method','full-hbmode','full-dlco-unit','full-resmethod']){
+for(const id of ['full-sex','full-age','full-height','full-weight','full-hb','full-reference','full-method','full-hbmode','full-dlco-unit','full-resmethod','full-quality']){
  $(id).addEventListener('input',()=>{showMode();markEdited();invalidate();});
 }
 $('confirmed').addEventListener('change',invalidate);
