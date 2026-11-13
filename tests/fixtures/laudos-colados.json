@@ -1,0 +1,94 @@
+[
+ [
+  "01 Exemplo do próprio app",
+  "Parametro Previsto LIN Pre Pos\nVEF1 3,32 2,50 2,00 2,40\nCVF 4,20 3,20 3,50 3,65\nVEF1/CVF 79 67 57,14 65,75"
+ ],
+ [
+  "02 Lab BR típico: Pré-BD %Prev Pós-BD %Prev Var% Previsto LIN",
+  "Parâmetro   Pré-BD  %Prev  Pós-BD  %Prev  Var%  Previsto  LIN\nCVF (L)      3,50    83     3,65    87     4     4,20      3,20\nVEF1 (L)     2,00    60     2,40    72     20    3,32      2,50\nVEF1/CVF     0,57           0,66                 0,79      0,67"
+ ],
+ [
+  "03 Inglês GLI: Pred LLN Pre %Pred Z-score Post %Pred %Chg",
+  "Parameter  Pred  LLN   Pre   %Pred  Z-score  Post  %Pred  %Chg\nFVC   L    4.20  3.20  3.50  83     -1.20    3.65  87     4\nFEV1  L    3.32  2.50  2.00  60     -2.60    2.40  72     20\nFEV1/FVC % 79    67    57    .      -2.40    66    .      ."
+ ],
+ [
+  "04 Só pré-BD, coluna \"Medido\" (exame sem broncodilatador)",
+  "Parâmetro  Previsto  LIN   Medido  %Prev\nCVF        4,20      3,20  3,90    93\nVEF1       3,32      2,50  3,10    93\nVEF1/CVF   79        67    79      100"
+ ],
+ [
+  "05 Valores com asterisco marcando abaixo do LIN",
+  "Parâmetro Previsto LIN Pre Pos\nVEF1 3,32 2,50 2,00* 2,40*\nCVF 4,20 3,20 3,50 3,65\nVEF1/CVF 79 67 57* 66*"
+ ],
+ [
+  "06 Unidade entre colchetes",
+  "Parameter Pred LLN Pre Post\nFEV1 [L] 3.32 2.50 2.00 2.40\nFVC [L] 4.20 3.20 3.50 3.65\nFEV1/FVC [%] 79 67 57 66"
+ ],
+ [
+  "07 Frase com \"pré\" depois do cabeçalho",
+  "Parametro Previsto LIN Pre Pos\nExame realizado pre e pos broncodilatador (salbutamol 400 mcg)\nVEF1 3,32 2,50 2,00 2,40\nCVF 4,20 3,20 3,50 3,65\nVEF1/CVF 79 67 57 66"
+ ],
+ [
+  "08 Relação escrita \"FEV1%FVC\" / \"Tiffeneau\"",
+  "Parameter Pred LLN Pre Post\nFEV1 3.32 2.50 2.00 2.40\nFVC 4.20 3.20 3.50 3.65\nFEV1%FVC 79 67 57 66"
+ ],
+ [
+  "09 Colado do Excel (tabs)",
+  "Parâmetro\tPré\tPós\tPrevisto\tLIN\nVEF1\t2,00\t2,40\t3,32\t2,50\nCVF\t3,50\t3,65\t4,20\t3,20\nVEF1/CVF\t57\t66\t79\t67"
+ ],
+ [
+  "10 Cabeçalho em duas linhas (Pré/Pós em cima)",
+  "             Pré-BD           Pós-BD\nParâmetro  Medido  %Prev   Medido  %Prev   Previsto  LIN\nVEF1        2,00    60      2,40    72      3,32      2,50\nCVF         3,50    83      3,65    87      4,20      3,20\nVEF1/CVF    57              66              79        67"
+ ],
+ [
+  "11 Restritivo (CVF baixa, relação normal) + volumes \"Medido Previsto LIN LSN\"",
+  "Parametro Previsto LIN Pre Pos\nVEF1 3,32 2,50 2,20 2,25\nCVF 4,20 3,20 2,60 2,65\nVEF1/CVF 79 67 85 85\n\nVolumes pulmonares (pletismografia)\nParâmetro Medido Previsto LIN LSN\nCPT 4,10 6,30 5,25 7,38\nVR 1,40 2,00 1,38 2,68\nVR/CPT 34 33 25 41\nCRF 2,10 3,30 2,41 4,15\nDLCO 14,2 27,5 22,5 -\nVA 3,90 5,80 4,80 -\nKCO 3,64 4,50 3,68 -"
+ ],
+ [
+  "12 PFT completa com um único cabeçalho \"Pré %Prev Previsto LIN\" (comum em laudo integrado)",
+  "Parâmetro  Pré   %Prev  Previsto  LIN\nCVF        2,60  62     4,20      3,20\nVEF1       2,20  66     3,32      2,50\nVEF1/CVF   85           79        67\nCPT        4,10  65     6,30      5,25\nVR         1,40  70     2,00      1,38\nDLCO       14,2  52     27,5      22,5"
+ ],
+ [
+  "13 DLCO com rótulos de equipamento (DLCO SB, DLCO/VA, unidade na linha)",
+  "Parâmetro          Medido  Previsto  LIN\nDLCO SB mL/min/mmHg 14,2   27,5      22,5\nDLCO/VA            3,64    4,50      3,68\nVA (L)             3,90    5,80      4,80"
+ ],
+ [
+  "14 Volume em mL (erro de unidade esperado)",
+  "Parametro Previsto LIN Pre Pos\nVEF1 3320 2500 2000 2400\nCVF 4200 3200 3500 3650\nVEF1/CVF 79 67 57 66"
+ ],
+ [
+  "15 Ponto decimal + vírgula de milhar misturados / tokens \"---\"",
+  "Parametro Previsto LIN Pre Pos\nVEF1 3.32 2.50 2.00 ---\nCVF 4.20 3.20 3.50 ---\nVEF1/CVF 0.79 0.67 0.57 ---"
+ ],
+ [
+  "16 OCR típico: \"VEF 1\" com espaço, \"Pré\" com acento estranho, O no lugar de 0",
+  "Parâmetro Previsto LIN Pré Pós\nVEF 1 3,32 2,5O 2,00 2,40\nCVF 4,2O 3,20 3,50 3,65\nVEF 1/CVF 79 67 57 66"
+ ],
+ [
+  "17 Normal com resposta BD em exame basal normal (limiar 10%)",
+  "Parametro Previsto LIN Pre Pos\nVEF1 3,32 2,50 3,00 3,30\nCVF 4,20 3,20 4,00 4,05\nVEF1/CVF 79 67 75 81"
+ ],
+ [
+  "18 Oscilometria com cabeçalho \"Medido Previsto LIN LSN\"",
+  "Parâmetro Medido Previsto LIN LSN\nR5 0,62 0,35 - 0,50\nR20 0,40 0,30 - 0,42\nX5 -0,25 -0,10 -0,18 -\nAX 2,10 0,50 - 1,20\nFres 22 12 - 18"
+ ],
+ [
+  "19 Laudo completo colado (cabeçalho do paciente + tudo)",
+  "LABORATÓRIO DE FUNÇÃO PULMONAR\nNome: Fulano de Tal    Sexo: Masculino   Idade: 50 anos\nAltura: 175 cm   Peso: 70 kg   Data do exame: 10/11/2026\nHb: 12,0 g/dL\nEquações: GLI 2012\n\nESPIROMETRIA\nParâmetro    Pré-BD  %Prev  Pós-BD  %Prev  Var%  Previsto  LIN\nCVF (L)      3,10    68     3,30    73     6     4,55      3,60\nVEF1 (L)     1,90    52     2,15    59     13    3,62      2,85\nVEF1/CVF     61             65                   80        69\nPFE (L/s)    5,10    57     5,60    63     10    8,90      6,80\n\nVOLUMES PULMONARES (Pletismografia)\nParâmetro    Medido  Previsto  LIN   LSN   %Prev\nCPT (L)      7,40    6,77      5,72  7,85  109\nVR (L)       3,60    2,04      1,42  2,72  176\nVR/CPT (%)   49      30        22    38    163\nCRF (L)      4,90    3,52      2,63  4,37  139\n\nDIFUSÃO\nParâmetro            Medido  Previsto  LIN\nDLCO SB (mL/min/mmHg) 15,0   28,6      23,6\nVA (L)               6,10    6,17      5,17\nDLCO/VA              2,46    4,08      3,26"
+ ],
+ [
+  "20 Data de nascimento em vez de idade; sexo F; altura em metros",
+  "Paciente: Maria X\nDN: 03/05/1970   Data: 12/11/2026   Sexo: F   Altura: 1,62 m   Peso: 61 kg\nParametro Previsto LIN Medido\nVEF1 2,70 2,10 2,60\nCVF 3,30 2,60 3,25\nVEF1/CVF 81 70 80"
+ ],
+ [
+  "21 VEF1 isolado reduzido",
+  "Parametro Previsto LIN Pre\nVEF1 3,32 2,50 2,40\nCVF 4,20 3,20 3,30\nVEF1/CVF 79 67 72"
+ ],
+ [
+  "22 Tabela markdown com pipes",
+  "| Parâmetro | Pré | Pós | Previsto | LIN |\n|---|---|---|---|---|\n| VEF1 | 2,00 | 2,40 | 3,32 | 2,50 |\n| CVF | 3,50 | 3,65 | 4,20 | 3,20 |\n| VEF1/CVF | 57 | | 79 | 67 |"
+ ],
+ [
+  "23 Linha sem cabeçalho (deve ser recusada)",
+  "VEF1 3,32 2,50 2,00 2,40\nCVF 4,20 3,20 3,50 3,65"
+ ]
+]

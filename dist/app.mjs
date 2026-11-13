@@ -1,14 +1,26 @@
-import {interpret,parseTable} from './clinical.mjs';
+import {interpret} from './clinical.mjs';
+import {parseExam} from './parser.mjs';
 const $=id=>document.getElementById(id);const labels={fev1:'VEF1',fvc:'CVF',ratio:'VEF1/CVF'};let busy=false,objectUrl=null;
-for(const [key,name]of Object.entries(labels)){const tr=document.createElement('tr');tr.innerHTML=`<td>${name}<small>${key==='ratio'?'Porcentagem':'Litros'}</small></td>`;for(const col of ['pre','post','pred','lln']){const td=document.createElement('td');if(key==='ratio'&&col!=='lln'){td.textContent='—';}else{const input=document.createElement('input');input.id=key+'-'+col;input.inputMode='decimal';input.placeholder='—';input.setAttribute('aria-label',name+' '+({pre:'pré',post:'pós',pred:'previsto',lln:'LIN'}[col]));input.addEventListener('input',invalidate);td.append(input);}tr.append(td);}$('values').append(tr);}
+for(const [key,name]of Object.entries(labels)){const tr=document.createElement('tr');tr.innerHTML=`<td>${name}<small>${key==='ratio'?'Porcentagem':'Litros'}</small></td>`;for(const col of ['pre','post','pred','lln']){const td=document.createElement('td');if(key==='ratio'&&col!=='lln'){td.textContent='—';}else{const input=document.createElement('input');input.id=key+'-'+col;input.inputMode='decimal';input.placeholder='—';input.setAttribute('aria-label',name+' '+({pre:'pré',post:'pós',pred:'previsto',lln:'LIN'}[col]));input.addEventListener('input',()=>{input.classList.remove('auto');invalidate();});td.append(input);}tr.append(td);}$('values').append(tr);}
 function getData(){const d={fev1:{},fvc:{},ratio:{}};for(const input of $('values').querySelectorAll('input')){const [key,col]=input.id.split('-');if(input.value.trim())d[key][col]=Number(input.value.trim().replace(',','.'));}return d;}
 function invalidate(){ $('confirmed').checked=false;$('interpret').disabled=true;$('report-panel').hidden=true;const r=interpret(getData());$('ratio-display').textContent=r.ratio==null?'—':r.ratio.toFixed(1)+'%';$('errors').textContent=r.errors.join(' ');}
-function clearValues(){for(const input of $('values').querySelectorAll('input'))input.value='';invalidate();}
+function clearValues(){for(const input of $('values').querySelectorAll('input')){input.value='';input.classList.remove('auto');}invalidate();}
 function status(s){$('status').textContent=s;}
 function setBusy(b){busy=b;for(const id of ['file','extract','example','reset','columns','source'])$(id).disabled=b;$('dropzone').setAttribute('aria-disabled',String(b));}
-function extract(){clearValues();const cols=$('columns').value;const data=parseTable($('source').value,cols?cols.split(','):null);let count=0;for(const [key,row]of Object.entries(data))for(const [col,v]of Object.entries(row)){const input=$(key+'-'+col);if(input){input.value=String(v);count++;}}invalidate();status(count?`${count} valores sugeridos. Confira cada campo com o original antes de gerar o laudo.`:'Não foi possível mapear a tabela com segurança. Confira a ordem das colunas ou preencha os campos manualmente.');}
-$('extract').onclick=extract;$('source').oninput=()=>{clearValues();status('Texto alterado. Extraia novamente os valores ou preencha manualmente.');};$('columns').onchange=invalidate;
-$('confirmed').onchange=()=>{const d=getData();$('interpret').disabled=!$('confirmed').checked||interpret(d).errors.length>0||!d.fev1.pre||!d.fvc.pre;};$('quality').onchange=invalidate;for(const id of ['patient','date'])$(id).oninput=()=>{$('report-panel').hidden=true;};
+const show=v=>String(Math.round(v*1000)/1000).replace('.',',');
+function extract(){clearValues();for(const id of ['patient','date'])if($(id).classList.contains('auto')){$(id).value='';$(id).classList.remove('auto');}const cols=$('columns').value;const data=parseExam($('source').value,{manualColumns:cols?cols.split(','):null});let count=0;
+ for(const [key,row]of Object.entries(data.spirometry))for(const [col,v]of Object.entries(row)){const input=$(key+'-'+col);if(input){input.value=show(v);input.classList.add('auto');count++;}}
+ if(data.demographics.patient){$('patient').value=data.demographics.patient;$('patient').classList.add('auto');}
+ if(data.demographics.date){$('date').value=data.demographics.date;$('date').classList.add('auto');}
+ invalidate();document.dispatchEvent(new CustomEvent('expiria:parsed',{detail:data}));
+ const parts=[];if(count)parts.push(`espirometria (${count} valores)`);for(const [k,n]of [['volumes','volumes'],['diffusion','DLCO'],['resistance','resistência']])if(data.counts[k])parts.push(`${n} (${data.counts[k]})`);
+ if(data.found.length)parts.push('paciente: '+data.found.join(', '));
+ let msg=parts.length?'Lido do texto: '+parts.join(' · ')+'. Campos preenchidos automaticamente estão destacados; confira cada um com o original antes de gerar o laudo.':'Não foi possível mapear a tabela com segurança. Confira a ordem das colunas ou preencha os campos manualmente.';
+ if(data.skipped.length)msg+=` ${data.skipped.length} linha(s) com rótulo reconhecido mas colunas ambíguas não foram usadas: `+data.skipped.slice(0,3).map(x=>'“'+x.slice(0,60)+'”').join('; ')+'.';
+ status(msg);}
+let autoTimer=null;
+$('extract').onclick=extract;$('source').oninput=()=>{clearTimeout(autoTimer);if(!$('source').value.trim()){clearValues();status('Escolha um arquivo, cole uma imagem ou insira o texto.');return;}status('Lendo o texto…');autoTimer=setTimeout(extract,350);};$('columns').onchange=invalidate;
+$('confirmed').onchange=()=>{const d=getData();$('interpret').disabled=!$('confirmed').checked||interpret(d).errors.length>0||!d.fev1.pre||!d.fvc.pre;};$('quality').onchange=invalidate;for(const id of ['patient','date'])$(id).oninput=()=>{$(id).classList.remove('auto');$('report-panel').hidden=true;};
 async function ocr(image){let worker;try{worker=await Tesseract.createWorker('eng',1,{workerPath:new URL('vendor/worker.min.js',location.href).href,corePath:new URL('vendor/core/',location.href).href,langPath:new URL('vendor/lang/',location.href).href,logger:m=>{if(m.status==='recognizing text')status(`Lendo imagem… ${Math.round(m.progress*100)}%`);}});return (await worker.recognize(image)).data.text;}finally{if(worker)await worker.terminate();}}
 async function loadFile(file){if(busy||!file)return;if(file.size>20*1024*1024){status('Arquivo maior que 20 MB. Escolha um arquivo menor.');return;}if(!(/\.(pdf|png|jpe?g|webp|txt)$/i.test(file.name)||/^(image\/(png|jpeg|webp)|application\/pdf|text\/plain)$/.test(file.type))){status('Formato não aceito. Use PDF, PNG, JPG, WEBP ou TXT.');return;}
  setBusy(true);clearValues();$('patient').value='';$('date').value='';$('quality').value='unknown';$('source').value='';$('columns').value='';$('preview').replaceChildren();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);$('open-original').href=objectUrl;$('filename').textContent=file.name||'Imagem colada';$('original').hidden=false;status('Abrindo exame…');
@@ -23,15 +35,35 @@ async function loadFile(file){if(busy||!file)return;if(file.size>20*1024*1024){s
 $('file').onchange=e=>loadFile(e.target.files[0]);$('dropzone').onclick=()=>{if(!busy)$('file').click();};$('dropzone').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();if(!busy)$('file').click();}};
 for(const type of ['dragenter','dragover'])$('dropzone').addEventListener(type,e=>{e.preventDefault();$('dropzone').classList.add('drag');});$('dropzone').ondragleave=()=>$('dropzone').classList.remove('drag');$('dropzone').ondrop=e=>{e.preventDefault();$('dropzone').classList.remove('drag');loadFile(e.dataTransfer.files[0]);};
 document.addEventListener('paste',e=>{const item=[...(e.clipboardData?.items||[])].find(x=>x.type.startsWith('image/'));if(item){e.preventDefault();loadFile(item.getAsFile());}});
-const example='Parametro Previsto LIN Pre Pos\nVEF1 3,32 2,50 2,00 2,40\nCVF 4,20 3,20 3,50 3,65\nVEF1/CVF 79 67 57,14 65,75';
-$('example').onclick=()=>{reset();$('source').value=example;$('patient').value='Exemplo fictício';extract();};
-function reset(){clearValues();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;$('preview').replaceChildren();$('original').hidden=true;$('source').value='';$('patient').value='';$('date').value='';$('quality').value='unknown';$('columns').value='';$('report').value='';$('report-status').textContent='';$('file').value='';status('Escolha um arquivo, cole uma imagem ou insira o texto.');}
+const example=`Nome: Exemplo fictício    Sexo: Masculino    Idade: 50 anos
+Altura: 175 cm    Peso: 70 kg    Data do exame: 10/11/2026    Hb: 13,8 g/dL
+
+ESPIROMETRIA
+Parâmetro    Pré-BD  %Prev  Pós-BD  %Prev  Var%  Previsto  LIN
+CVF (L)      3,10    68     3,30    73     6     4,55      3,60
+VEF1 (L)     1,90    52     2,15    59     13    3,62      2,85
+VEF1/CVF     61             65                   80        69
+
+VOLUMES PULMONARES (pletismografia)
+Parâmetro    Medido  Previsto  LIN   LSN
+CPT (L)      7,40    6,77      5,72  7,85
+VR (L)       3,60    2,04      1,42  2,72
+VR/CPT (%)   49      30        22    38
+CRF (L)      4,90    3,52      2,63  4,37
+
+DIFUSÃO
+Parâmetro         Medido  Previsto  LIN
+DLCO (mL/min/mmHg) 15,0   28,6      23,6
+VA (L)            6,10    6,17      5,17
+DLCO/VA           2,46    4,08      3,26`;
+$('example').onclick=()=>{reset();$('source').value=example;extract();};
+function reset(){clearTimeout(autoTimer);clearValues();$('patient').classList.remove('auto');$('date').classList.remove('auto');if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;$('preview').replaceChildren();$('original').hidden=true;$('source').value='';$('patient').value='';$('date').value='';$('quality').value='unknown';$('columns').value='';$('report').value='';$('report-status').textContent='';$('file').value='';status('Escolha um arquivo, cole uma imagem ou insira o texto.');}
 $('reset').onclick=()=>{if(($('source').value||$('fev1-pre').value)&&!confirm('Iniciar um novo exame? Os dados atuais não são salvos automaticamente.'))return;reset();};
-const patternNames={normal:'Valores dentro dos limites',obstruction:'Padrão obstrutivo','low-fvc':'CVF reduzida, relação preservada',indeterminate:'Referências insuficientes'};
+const patternNames={normal:'Valores dentro dos limites',obstruction:'Padrão obstrutivo','low-fvc':'CVF reduzida, relação preservada','low-fev1':'VEF1 reduzido isolado',indeterminate:'Referências insuficientes'};
 const responseNames={positive:'Resposta significativa',negative:'Sem resposta significativa',incomplete:'Avaliação incompleta'};
 const fmt=(v,n=2)=>v==null?'não informado':v.toFixed(n).replace('.',',');
 $('interpret').onclick=()=>{const d=getData(),r=interpret(d);if(!$('confirmed').checked||r.errors.length||!d.fev1.pre||!d.fvc.pre)return;const quality=$('quality').value;const qtext={unknown:'Qualidade técnica não avaliada: não há confirmação de aceitabilidade e repetibilidade. Interpretação numérica provisória.',acceptable:'Aceitabilidade e repetibilidade verificadas pelo médico no exame original.',limited:'Exame com limitações técnicas informadas pelo usuário. A interpretação numérica abaixo é provisória e pode não representar a função pulmonar real.'}[quality];
- let conclusion={normal:'Relação VEF1/CVF e CVF pré-broncodilatador dentro dos limites de normalidade informados.',obstruction:'Relação VEF1/CVF pré-broncodilatador abaixo do limite inferior da normalidade, sugerindo padrão ventilatório obstrutivo. Se o VEF1 estiver preservado, considerar disanapse/variante da normalidade e probabilidade clínica antes de concluir doença obstrutiva.','low-fvc':'CVF pré-broncodilatador abaixo do limite inferior da normalidade, com relação VEF1/CVF preservada. A espirometria isolada não confirma restrição; a confirmação depende da capacidade pulmonar total.',indeterminate:'Dados de referência insuficientes para classificar completamente o padrão. Informe os limites inferiores da normalidade da relação VEF1/CVF e da CVF.'}[r.pattern];if(r.pattern==='obstruction'&&r.lowFvc)conclusion+=' CVF também reduzida: pode refletir aprisionamento aéreo ou restrição associada. Não é possível confirmar distúrbio misto sem volumes pulmonares.';
+ let conclusion={normal:'Relação VEF1/CVF e CVF pré-broncodilatador dentro dos limites de normalidade informados.',obstruction:'Relação VEF1/CVF pré-broncodilatador abaixo do limite inferior da normalidade, sugerindo padrão ventilatório obstrutivo. Se o VEF1 estiver preservado, considerar disanapse/variante da normalidade e probabilidade clínica antes de concluir doença obstrutiva.','low-fvc':'CVF pré-broncodilatador abaixo do limite inferior da normalidade, com relação VEF1/CVF preservada. A espirometria isolada não confirma restrição; a confirmação depende da capacidade pulmonar total.','low-fev1':'VEF1 pré-broncodilatador abaixo do limite inferior da normalidade, com relação VEF1/CVF e CVF preservadas: alteração isolada e inespecífica. Correlacionar com o contexto clínico; volumes pulmonares podem auxiliar se houver suspeita de doença.',indeterminate:'Dados de referência insuficientes para classificar completamente o padrão. Informe os limites inferiores da normalidade da relação VEF1/CVF e da CVF.'}[r.pattern];if(r.pattern==='obstruction'&&r.lowFvc)conclusion+=' CVF também reduzida: pode refletir aprisionamento aéreo ou restrição associada. Não é possível confirmar distúrbio misto sem volumes pulmonares.';
  let text=`EXPIRIA · SUGESTÃO DE LAUDO PARA REVISÃO MÉDICA\n${$('patient').value?'Exame: '+$('patient').value+'\n':''}${$('date').value?'Data: '+$('date').value.split('-').reverse().join('/')+'\n':''}\nQUALIDADE TÉCNICA\n${qtext}\n\nVALORES CONFERIDOS\n`;
  for(const key of ['fev1','fvc']){const row=d[key];text+=`${labels[key]}: pré ${fmt(row.pre)} L; pós ${fmt(row.post)}${row.post!=null?' L':''}; previsto ${fmt(row.pred)}${row.pred!=null?' L':''}; LIN ${fmt(row.lln)}${row.lln!=null?' L':''}.\n`;}
  text+=`VEF1/CVF pré calculada: ${fmt(r.ratio,1)}%; LIN: ${fmt(d.ratio.lln,1)}${d.ratio.lln!=null?'%':''}.\n\nINTERPRETAÇÃO NUMÉRICA\n${conclusion}\n\nBRONCODILATADOR — SBPT 2024\n`;

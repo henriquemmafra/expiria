@@ -7,7 +7,7 @@ export function interpret(d, options={}){
  let pattern='indeterminate';
  if(!errors.length&&ratio!==null&&valid(r.lln)){
   if(ratio<r.lln)pattern='obstruction';
-  else if(valid(b.lln))pattern=b.pre<b.lln?'low-fvc':(valid(a.lln)&&a.pre<a.lln?'indeterminate':'normal');
+  else if(valid(b.lln))pattern=b.pre<b.lln?'low-fvc':(valid(a.lln)&&a.pre<a.lln?'low-fev1':'normal');
  }
  const deltas={};
  for(const [name,row]of [['fev1',a],['fvc',b]])if(valid(row.pre)&&valid(row.post)&&valid(row.pred))deltas[name]={liters:row.post-row.pre,percent:(row.post-row.pre)/row.pred*100};
@@ -20,26 +20,6 @@ export function interpret(d, options={}){
  if(errors.length)response='incomplete';
  return {pattern,response,ratio,deltas,errors,threshold,guideline,europeanResponse:errors.length?'incomplete':europeanResponse,baseline:abnormal?'alterado':normal?'normal':'indeterminado',lowFvc:valid(b.pre)&&valid(b.lln)&&b.pre<b.lln};
 }
-const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/₁/g,'1');
-export function parseTable(text,manualColumns=null){
- const out={};let columns=manualColumns;
- for(const raw of text.split(/\r?\n/)){
-  const line=norm(raw).trim();
-  if(!manualColumns&&/\b(pre|pre-bd|basal)\b/.test(line)&&!/^\s*(vef|fev|cvf|fvc)/.test(line)){
-   const tokens=line.replace(/%\s+(prev\w*|pred\w*)/g,'%pred').split(/[\s;|\t]+/);
-   const mapped=tokens.map(t=>/^(pre|pre-bd|basal)$/.test(t)?'pre':/^(pos|post|pos-bd|post-bd)$/.test(t)?'post':/^(previsto|predicted|pred|prev|teorico)$/.test(t)?'pred':/^(lin|lln)$/.test(t)?'lln':/^(%|%pred|%prev|z|z-score|delta|%var)$/.test(t)?'skip':null).filter(Boolean);
-   if(mapped.includes('pre'))columns=mapped;
-   continue;
-  }
-  if(!columns)continue;
-  const match=line.match(/^(vef\s*1\s*\/\s*cvf|fev\s*1\s*\/\s*fvc|vef\s*1|fev\s*1|cvf|fvc)\b(.*)$/);
-  if(!match)continue;
-  const key=match[1].includes('/')?'ratio':/^(vef|fev)/.test(match[1])?'fev1':'fvc';
-  const tokens=match[2].replace(/\([^)]*\)/g,'').replace(/^\s*(l|litros|%)\s*/,'').trim().split(/[\s;|\t]+/).filter(Boolean);
-  if(tokens.length!==columns.length||out[key])continue;
-  const row={};let bad=false;
-  tokens.forEach((t,i)=>{if(columns[i]==='skip')return; if(/^[-–—]+$/.test(t))return; if(!/^\d+(?:[.,]\d+)?%?$/.test(t)){bad=true;return;}let n=Number(t.replace('%','').replace(',','.'));if(key==='ratio'&&n>0&&n<=1)n*=100;row[columns[i]]=n;});
-  if(!bad)out[key]=row;
- }
- return out;
-}
+// Compatibilidade: a leitura agora é feita pelo parser unificado.
+import {parseExam} from './parser.mjs';
+export function parseTable(text,manualColumns=null){return parseExam(text,{manualColumns}).spirometry;}

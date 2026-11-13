@@ -1,4 +1,4 @@
-import {analyzeFull,brazilReferences,parseSupplement,PARAMETERS} from './full-function.mjs';
+import {analyzeFull,brazilReferences,PARAMETERS} from './full-function.mjs';
 import {interpret as interpretSpirometry} from './clinical.mjs';
 const $=id=>document.getElementById(id);
 const nval=id=>{const v=$(id)?.value.trim();return v?Number(v.replace(',','.')):null;};
@@ -45,7 +45,7 @@ for(const [group,keys]of Object.entries(groups)){
    const td=document.createElement('td'),input=document.createElement('input');
    input.id='full-'+group+'-'+key+'-'+col;input.inputMode='decimal';input.placeholder=col==='measured'?'—':'auto / —';
    input.setAttribute('aria-label',PARAMETERS[key][0]+' '+col);input.autocomplete='off';
-   input.addEventListener('input',()=>{markEdited();invalidate();});td.append(input);tr.append(td);
+   input.addEventListener('input',()=>{input.classList.remove('auto');markEdited();invalidate();});td.append(input);tr.append(td);
   }tbody.append(tr);
  }
  table.append(tbody);wrap.append(table);section.append(wrap);$('full-tables').append(section);
@@ -154,35 +154,35 @@ $('interpret').addEventListener('click',()=>{
  if(r.errors.length){$('report').value+='\n\nATENÇÃO: resultados complementares omitidos por inconsistências numéricas: '+r.errors.join(' ');return;}
  $('report').value+=appendix(r);addCard(r);
 });
-function extract(){
- const found=parseSupplement($('source').value);let added=0;
- for(const [group,items]of Object.entries(found.data))for(const [key,row]of Object.entries(items)){
-  for(const [col,val]of Object.entries(row)){
-   const input=$('full-'+group+'-'+key+'-'+col);
-   if(input&&!input.value.trim()){input.value=String(val);added++;}
-  }
+const SELECT_DEFAULTS={'full-sex':'','full-reference':'brazil','full-method':'pleth','full-hbmode':'none','full-dlco-unit':'traditional','full-resmethod':'pleth','full-quality':'unknown'};
+function setField(id,value){const el=$(id);if(!el||value==null||value==='')return;el.value=String(value);el.classList.add('auto');}
+// Cada texto colado é um exame novo: limpa o anterior e preenche o que foi lido.
+document.addEventListener('expiria:parsed',({detail:p})=>{
+ for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto');}
+ for(const [id,v]of Object.entries(SELECT_DEFAULTS)){$(id).value=v;$(id).classList.remove('auto');}
+ const d=p.demographics||{},st=p.settings||{};
+ setField('full-sex',d.sex);setField('full-age',d.age);setField('full-height',d.height);setField('full-weight',d.weight);setField('full-hb',d.hemoglobin);
+ setField('full-method',st.volumeMethod);setField('full-dlco-unit',st.dlcoUnit);setField('full-resmethod',st.resistanceMethod);
+ if(st.hbCorrected)setField('full-hbmode','already');
+ let added=0;
+ for(const group of ['volumes','diffusion','resistance'])for(const [key,row]of Object.entries(p[group]||{}))for(const [col,val]of Object.entries(row)){
+  const input=$('full-'+group+'-'+key+'-'+col);if(input){input.value=String(Math.round(val*1000)/1000).replace('.',',');input.classList.add('auto');added++;}
  }
- markEdited();invalidate();$('full-extract-status').textContent=added?added+' campos extraídos. Confira valores e unidades no exame original.':'Nenhuma tabela com cabeçalho seguro foi encontrada. Preencha manualmente.';
-}
-$('full-extract').onclick=extract;
-let lastSource='';
-new MutationObserver(()=>{
- const value=$('source').value;
- if(value&&value!==lastSource){lastSource=value;if(parseSupplement(value).count)extract();}
-}).observe($('status'),{childList:true,subtree:true,characterData:true});
+ for(const section of container.querySelectorAll('.full-details'))if([...section.querySelectorAll('input')].some(x=>x.value))section.open=true;
+ showMode();markEdited();invalidate();
+ $('full-extract-status').textContent=added?added+' campos complementares lidos do texto. Confira valores e unidades no exame original.':'Sem tabelas complementares no texto.';
+});
+$('full-extract').onclick=()=>$('extract').click();
+$('full-extract').textContent='Reler o texto colado';
 for(const id of ['full-sex','full-age','full-height','full-weight','full-hb','full-reference','full-method','full-hbmode','full-dlco-unit','full-resmethod','full-quality']){
- $(id).addEventListener('input',()=>{showMode();markEdited();invalidate();});
+ $(id).addEventListener('input',()=>{$(id).classList.remove('auto');showMode();markEdited();invalidate();});
 }
 $('confirmed').addEventListener('change',invalidate);
-$('example').addEventListener('click',()=>{
- for(const input of container.querySelectorAll('input'))input.value='';
- invalidate();
-});
 $('reset').addEventListener('click',()=>{
  // Só reinicializar controles adicionais se o formulário principal tiver sido limpo.
  if($('source').value||$('fev1-pre').value)return;
- for(const input of container.querySelectorAll('input'))input.value='';
- for(const select of container.querySelectorAll('select'))select.selectedIndex=0;
- lastSource='';showMode();invalidate();
+ for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto');}
+ for(const select of container.querySelectorAll('select')){select.selectedIndex=0;select.classList.remove('auto');}
+ showMode();invalidate();
 });
 showMode();invalidate();

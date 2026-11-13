@@ -198,42 +198,9 @@ export function analyzeFull(input={}){
   vaToTlc:positive(D.va.measured)&&positive(V.tlc.measured)?100*D.va.measured/V.tlc.measured:null,
   references:{volume:'Lessa et al., J Bras Pneumol 2021;47:e20200359',diffusion:'Guimarães et al., J Bras Pneumol 2019;45:e20180262',hb:'ERS/ATS DLCO 2017'}};
 }
-export function parseSupplement(text,mode='auto'){
- const defs=[
-  ['tlc',/^(?:cpt|tlc)\b/i],['rvtlc',/^(?:vr\s*\/\s*cpt|rv\s*\/\s*tlc)\b/i],['rv',/^(?:vr|rv)\b/i],['frc',/^(?:crf|frc|f r c)\b/i],['erv',/^(?:vre|erv)\b/i],['ic',/^(?:ci|ic)\b/i],['vc',/^(?:cv(?:\s+lenta)?|svc)\b/i],
-  ['dlco',/^(?:dlco|dco|tlco)\b/i],['va',/^(?:va|volume\s+alveolar)\b/i],['kco',/^(?:kco)\b/i],
-  ['raw',/^raw\b/i],['sraw',/^sraw\b/i],['gaw',/^gaw\b/i],['sgaw',/^sgaw\b/i],
-  ['r5r20',/^r5\s*[-–]\s*r20\b/i],['r5',/^r5\b/i],['r20',/^r20\b/i],
-  ['x5',/^x5\b/i],['ax',/^ax\b/i],['fres',/^(?:fres|fr)\b/i]
- ];
- let columns=null;const out={volumes:{},diffusion:{},resistance:{}};let count=0;
- for(const raw of String(text||'').split(/\r?\n/)){
-  const line=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/₅/g,'5').trim();
-  // Only map tabular values when a verifiable heading is present.
-  if(/\b(medido|observado|real|meas(?:ured)?)\b/i.test(line)&&/\b(previsto|pred|predicted)\b/i.test(line)&&line.length<130){
-   const toks=line.replace(/% ?(?:prev(?:isto)?|pred(?:icted)?)/ig,'percent').split(/[\t\s;|]+/);
-   const arr=toks.map(x=>/^(medido|observado|real|meas|measured)$/i.test(x)?'measured':
-    /^(previsto|pred|predicted)$/i.test(x)?'pred':
-    /^(lin|lln)$/i.test(x)?'lln':/^(lsn|uln)$/i.test(x)?'uln':
-    /^(percent|%|z|score|zscore)$/i.test(x)?'skip':null).filter(Boolean);
-   columns=arr.includes('measured')&&arr.includes('pred')?arr:null;
-   continue;
-  }
-  if(!columns)continue;
-  const matched=defs.find(([,re])=>re.test(line));if(!matched)continue;
-  const [key,re]=matched;
-  const values=line.replace(re,'').replace(/^\s*\([^)]*\)/,'').trim().split(/[\s;|\t]+/).filter(Boolean);
-  if(values.length!==columns.length)continue;
-  const row={};let ok=true;
-  values.forEach((t,i)=>{
-   if(columns[i]==='skip')return;
-   if(/^[-–—]+$/.test(t))return;
-   if(!/^-?\d+(?:[.,]\d+)?$/.test(t)){ok=false;return;}
-   row[columns[i]]=Number(t.replace(',','.'));
-  });
-  if(!ok||!finite(row.measured))continue;
-  const group=VOLUME_KEYS.includes(key)?'volumes':DLCO_KEYS.includes(key)?'diffusion':'resistance';
-  if(!out[group][key]){out[group][key]=row;count++;}
- }
- return {data:out,count};
+// Compatibilidade: a leitura agora é feita pelo parser unificado (dist/parser.mjs).
+import {parseExam} from './parser.mjs';
+export function parseSupplement(text){
+ const p=parseExam(text);
+ return {data:{volumes:p.volumes,diffusion:p.diffusion,resistance:p.resistance},count:p.counts.volumes+p.counts.diffusion+p.counts.resistance};
 }

@@ -7,7 +7,8 @@ Aplicativo web para interpretação assistida de espirometria, volumes pulmonare
 ## Recursos
 - Upload de PDF (até 10 páginas), PNG, JPG, WEBP ou TXT, até 20 MB.
 - Colar imagem ou texto; PDF digital com extração nativa, PDF escaneado e imagens com OCR Tesseract no navegador.
-- Tabelas com cabeçalhos reconhecidos ou ordem de colunas selecionada pelo usuário; preenchimento manual quando ambíguas.
+- **Colar o laudo inteiro**: um único parser (`dist/parser.mjs`) lê espirometria, volumes, DLCO, resistência/oscilometria e os dados do paciente (sexo, idade ou nascimento, estatura, peso, Hb, data), além do método (pletismografia/diluição, unidade da DLCO, DLCO corrigida). A leitura é automática ao colar e os campos preenchidos ficam destacados para conferência.
+- Cabeçalhos flexíveis (Pré/Pós-BD, Medido, Atual, Best, Pred, LLN, %Prev, Z-score, Var%, cabeçalho em duas linhas), células vazias, tabelas com tab/pipe/ponto e vírgula, marcadores `*`, unidades `(L)`/`[L]`/mL e erros comuns de OCR. Linhas sem cabeçalho reconhecido nunca são adivinhadas: são listadas no status.
 - Conferência obrigatória dos dados, cálculo VEF1/CVF, interpretação por LIN e resposta broncodilatadora SBPT 2024 (≥7% com basal alterado, ≥10% com basal normal), com comparação ERS/ATS 2022 (>10%).
 - Volumes pulmonares por pletismografia com equações brasileiras de Lessa et al. 2021: CPT, VR, VR/CPT, CRF, CI, VRE e CV (com restrições de idade, estatura, IMC e método).
 - Difusão por monóxido de carbono (DLCO, VA, KCO) com equações **da tabela original** Guimarães et al. 2019; opção de ajustar o previsto por hemoglobina segundo ERS/ATS e converter SI/tradicional.
