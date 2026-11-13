@@ -44,7 +44,7 @@ for(const [group,keys]of Object.entries(groups)){
    const td=document.createElement('td'),input=document.createElement('input');
    input.id='full-'+group+'-'+key+'-'+col;input.inputMode='decimal';input.placeholder=col==='measured'?'—':'auto / —';
    input.setAttribute('aria-label',PARAMETERS[key][0]+' '+col);input.autocomplete='off';
-   input.addEventListener('input',invalidate);td.append(input);tr.append(td);
+   input.addEventListener('input',()=>{markEdited();invalidate();});td.append(input);tr.append(td);
   }tbody.append(tr);
  }
  table.append(tbody);wrap.append(table);section.append(wrap);$('full-tables').append(section);
@@ -64,7 +64,7 @@ function sourceData(){
   for(const col of ['measured','pred','lln','uln']){
    const v=nval('full-'+group+'-'+key+'-'+col);if(v!==null)row[col]=v;
   }
-  if(Object.keys(row).length)d[group][key]=row;
+  if(Object.keys(row).length&&!(group==='resistance'&&($('full-resmethod').value==='osc'?groups.resistance.slice(0,4).includes(key):groups.resistance.slice(4).includes(key))))d[group][key]=row;
  }
  if($('full-dlco-unit').value==='si')for(const key of groups.diffusion){
   if(key==='va')continue;
@@ -86,6 +86,7 @@ function fullAnalysis(){
   hbMode:$('full-hbmode').value,resistanceMethod:$('full-resmethod').value
  },spirometry:interpretSpirometry(spiroData())});
 }
+function markEdited(){$('confirmed').checked=false;$('interpret').disabled=true;}
 function invalidate(){
  const result=fullAnalysis(),s=spiroData();
  $('full-generate').disabled=!$('confirmed').checked||(!result.hasData&&!(s.fev1.pre&&s.fvc.pre));
@@ -128,6 +129,8 @@ function addCard(r){
 }
 function generate(){
  const r=fullAnalysis(),spi=interpretSpirometry(spiroData());
+ const invalid=[...container.querySelectorAll('input')].filter(x=>x.value.trim()&&(!Number.isFinite(Number(x.value.trim().replace(',','.')))||x.type==='number'&&(x.validity.rangeOverflow||x.validity.rangeUnderflow)));
+ if(invalid.length){$('full-extract-status').textContent='Corrigir campos numéricos inválidos: '+invalid.map(x=>x.getAttribute('aria-label')||x.id).join(', ');return;}
  if(r.errors.length){$('full-extract-status').textContent='Corrigir valores: '+r.errors.join(' ');return;}
  if(!r.hasData){if(!$('interpret').disabled)$('interpret').click();return;}
  if(spiroData().fev1.pre&&spiroData().fvc.pre&&!spi.errors.length&&!$('interpret').disabled){
@@ -155,7 +158,7 @@ function extract(){
    if(input&&!input.value.trim()){input.value=String(val);added++;}
   }
  }
- invalidate();$('full-extract-status').textContent=added?added+' campos extraídos. Confira valores e unidades no exame original.':'Nenhuma tabela com cabeçalho seguro foi encontrada. Preencha manualmente.';
+ markEdited();invalidate();$('full-extract-status').textContent=added?added+' campos extraídos. Confira valores e unidades no exame original.':'Nenhuma tabela com cabeçalho seguro foi encontrada. Preencha manualmente.';
 }
 $('full-extract').onclick=extract;
 let lastSource='';
@@ -164,7 +167,7 @@ new MutationObserver(()=>{
  if(value&&value!==lastSource){lastSource=value;if(parseSupplement(value).count)extract();}
 }).observe($('status'),{childList:true,subtree:true,characterData:true});
 for(const id of ['full-sex','full-age','full-height','full-weight','full-hb','full-reference','full-method','full-hbmode','full-dlco-unit','full-resmethod']){
- $(id).addEventListener('input',()=>{showMode();invalidate();});
+ $(id).addEventListener('input',()=>{showMode();markEdited();invalidate();});
 }
 $('confirmed').addEventListener('change',invalidate);
 $('example').addEventListener('click',()=>{
