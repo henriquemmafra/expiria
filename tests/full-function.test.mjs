@@ -44,7 +44,7 @@ test('Confirmed TLC restriction and mixed pattern only with obstruction',()=>{
  const result=analyzeFull(input);
  assert.ok(result.remarks.some(x=>x.includes('misto')));
  const without=analyzeFull({...input,volumes:{}});
- assert.equal(without.remarks.some(x=>x.includes('misto')),false);
+ assert.equal(without.remarks.some(x=>x.startsWith('Distúrbio ventilatório misto')),false);
 });
 test('Normal TLC with raised RV/TLC indicates air trapping not restriction',()=>{
  const ref=brazilReferences(man).refs;
@@ -63,7 +63,7 @@ test('DLCO low with normal KCO and low VA is still abnormal',()=>{
 test('Resistance with no supplied limits stays unclassified',()=>{
  const result=analyzeFull({settings:{reference:'equipment'},resistance:{raw:{measured:3}}});
  assert.equal(result.resistance.find(r=>r.key==='raw').status,'unclassified');
- assert.ok(result.remarks.some(x=>x.includes('não classific')));
+ assert.ok(result.remarks.some(x=>x.includes('sem limites específicos')));
 });
 test('Resistance with lab upper limit can be interpreted',()=>{
  const result=analyzeFull({settings:{reference:'equipment'},resistance:{raw:{measured:3,uln:2}}});
