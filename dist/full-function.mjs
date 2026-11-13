@@ -120,6 +120,8 @@ export function analyzeFull(input={}){
  for(const key of VOLUME_KEYS)V[key]=measuredRow(vol[key],refV[key]);
  for(const key of DLCO_KEYS)D[key]=measuredRow(diff[key],refD[key]);
  for(const key of RES_KEYS)R[key]=measuredRow(res[key],null);
+ if(!finite(R.gaw.measured)&&positive(R.raw.measured)){R.gaw.measured=1/R.raw.measured;R.gaw.derived=true;}
+ if(!finite(R.sgaw.measured)&&positive(R.sraw.measured)){R.sgaw.measured=1/R.sraw.measured;R.sgaw.derived=true;}
  if(!finite(V.rvtlc.measured)&&positive(V.tlc.measured)&&finite(V.rv.measured)){
   V.rvtlc.measured=V.rv.measured/V.tlc.measured*100;V.rvtlc.derived=true;
  }
@@ -157,7 +159,10 @@ export function analyzeFull(input={}){
   warnings.push('CPT difere de CI + CRF; revisar método, manobras ou transcrição.');
  if(positive(V.tlc.measured)&&positive(D.va.measured)&&D.va.measured/V.tlc.measured>1.15)warnings.push('VA maior que 115% da CPT: verificar testes, método e transcrição.');
  if(positive(D.dlco.measured)&&positive(D.va.measured)&&positive(diff.kco?.measured)&&Math.abs(D.dlco.measured/D.va.measured-diff.kco.measured)>.15*diff.kco.measured)warnings.push('KCO digitado difere de DLCO/VA em mais de 15%.');
+ if(positive(R.raw.measured)&&positive(res.gaw?.measured)&&Math.abs(1/R.raw.measured-res.gaw.measured)>.15*res.gaw.measured)warnings.push('Gaw e 1/Raw divergem mais de 15%; confirmar unidades e transcrição.');
+ if(positive(R.sraw.measured)&&positive(res.sgaw?.measured)&&Math.abs(1/R.sraw.measured-res.sgaw.measured)>.15*res.sgaw.measured)warnings.push('sGaw e 1/sRaw divergem mais de 15%; confirmar unidades e transcrição.');
  if(positive(V.tlc.measured)&&positive(V.rv.measured)&&finite(vol.rvtlc?.measured)&&Math.abs(V.rv.measured/V.tlc.measured*100-vol.rvtlc.measured)>5)warnings.push('VR/CPT não coincide com VR e CPT; conferir valores.');
+ if((supplied(vol)||supplied(diff)||supplied(res))&&settings.quality!=='verified')warnings.push(settings.quality==='limited'?'Qualidade técnica complementar informada como limitada; conclusões provisórias.':'Qualidade das manobras complementares não confirmada: verificar aceitabilidade e repetibilidade.');
  if(settings.resistanceMethod==='osc'&&supplied(res))warnings.push('Oscilometria: confirmar equações de referência, posição, frequências e unidades do aparelho.');
  else if(supplied(res))warnings.push('Resistência: limites de referência devem ser informados pelo aparelho/laboratório; não há equação automática selecionada.');
  const volumes=assessment(V,VOLUME_KEYS),diffusion=assessment(D,DLCO_KEYS);
