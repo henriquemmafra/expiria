@@ -88,3 +88,11 @@ test('Unambiguous measured/predicted/LLN header can be extracted',()=>{
 test('Ambiguous rows are not guessed',()=>{
  const p=parseSupplement('CPT 4.5 6.5 5.1');assert.equal(p.count,0);
 });
+
+test('Conductance can be derived from resistance without assigning a reference',()=>{
+ const a=analyzeFull({settings:{reference:'equipment'},
+ resistance:{raw:{measured:2},sraw:{measured:5}}});
+ near(a.resistance.find(r=>r.key==='gaw').measured,.5);
+ near(a.resistance.find(r=>r.key==='sgaw').measured,.2);
+ assert.equal(a.resistance.find(r=>r.key==='gaw').status,'unclassified');
+});
