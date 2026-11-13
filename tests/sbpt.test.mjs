@@ -1,0 +1,11 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {interpret} from '../dist/clinical.mjs';
+const altered={fev1:{pre:2,post:2.28,pred:4,lln:3},fvc:{pre:4,post:4,pred:5,lln:3.5},ratio:{lln:70}};
+const normal={fev1:{pre:3.2,post:3.6,pred:4,lln:3},fvc:{pre:4,post:4,pred:5,lln:3.5},ratio:{lln:70}};
+test('SBPT positive at exactly 7% for abnormal baseline',()=>assert.equal(interpret(altered).response,'positive'));
+test('SBPT negative below 7%',()=>assert.equal(interpret({...altered,fev1:{...altered.fev1,post:2.279}}).response,'negative'));
+test('SBPT positive at exactly 10% normal baseline',()=>assert.equal(interpret(normal).response,'positive'));
+test('SBPT normal baseline below 10% is negative',()=>assert.equal(interpret({...normal,fev1:{...normal.fev1,post:3.59}}).response,'negative'));
+test('Unknown baseline does not select a threshold',()=>assert.equal(interpret({...normal,ratio:{}}).response,'incomplete'));
+test('European comparison retains strictly greater than 10%',()=>assert.equal(interpret(normal).europeanResponse,'negative'));
+test('Low FEV1 alone is abnormal for response threshold',()=>assert.equal(interpret({...altered,ratio:{lln:40}}).threshold,7));
+test('Default source is SBPT 2024',()=>assert.equal(interpret(altered).guideline,'sbpt2024'));

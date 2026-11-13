@@ -1,0 +1,1 @@
+{"name":"expiria","version":"0.1.0","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","build":"node scripts/vendor.mjs"},"dependencies":{"pdfjs-dist":"4.10.38","tesseract.js":"7.0.0"}}

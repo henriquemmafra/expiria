@@ -1,0 +1,17 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {interpret as interpretBase,parseTable} from '../dist/clinical.mjs';
+const interpret=d=>interpretBase(d,{guideline:'ers2022'});
+const base={fev1:{pre:3,post:3.4,pred:4},fvc:{pre:4,post:4.1,pred:5,lln:3.5},ratio:{lln:70}};
+test('No normal classification without LLN',()=>assert.equal(interpret({...base,ratio:{}}).pattern,'indeterminate'));
+test('Exactly 10% is not a positive bronchodilator response',()=>assert.equal(interpret(base).response,'negative'));
+test('Greater than 10% predicted is positive',()=>assert.equal(interpret({...base,fev1:{...base.fev1,post:3.41}}).response,'positive'));
+test('Partial negative data cannot exclude response in other parameter',()=>assert.equal(interpret({...base,fvc:{pre:4,lln:3.5}}).response,'incomplete'));
+test('Low ratio indicates obstruction',()=>assert.equal(interpret({...base,fev1:{pre:2},ratio:{lln:70}}).pattern,'obstruction'));
+test('Low FVC with preserved ratio does not confirm restriction',()=>assert.equal(interpret({...base,fev1:{pre:2.4},fvc:{pre:3,lln:3.5}}).pattern,'low-fvc'));
+test('Missing FVC LLN cannot call normal',()=>assert.equal(interpret({...base,fvc:{pre:4}}).pattern,'indeterminate'));
+test('Reject impossible FEV1 > FVC',()=>assert.ok(interpret({...base,fev1:{pre:5}}).errors.length));
+test('Reject zero volumes',()=>assert.ok(interpret({...base,fev1:{pre:0}}).errors.length));
+test('Parse labeled columns with decimal commas',()=>assert.deepEqual(parseTable('Parametro Previsto LIN Pre Pos\nVEF1 4,0 3,1 2,0 2,5\nCVF 5,0 3,8 4,0 4,1').fev1,{pred:4,lln:3.1,pre:2,post:2.5}));
+test('Never infer ambiguous column meanings',()=>assert.equal(parseTable('VEF1 4 3 2 2.5').fev1,undefined));
+test('Do not mistake percent predicted for measured column',()=>assert.equal(parseTable('Parametro Previsto Pre %Prev Pos\nVEF1 4 2 50 2.5').fev1.post,2.5));
