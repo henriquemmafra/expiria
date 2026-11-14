@@ -96,3 +96,23 @@ test('Conductance can be derived from resistance without assigning a reference',
  near(a.resistance.find(r=>r.key==='sgaw').measured,.2);
  assert.equal(a.resistance.find(r=>r.key==='gaw').status,'unclassified');
 });
+
+import {brazilSpirometryReferences} from '../dist/full-function.mjs';
+test('Pereira 2007: previsto e LIN da espirometria (homem 175 cm, 50 anos)', () => {
+  const {refs, errors} = brazilSpirometryReferences({sex: 'M', age: 50, height: 175});
+  assert.deepEqual(errors, []);
+  assert.deepEqual([refs.fvc.pred, refs.fvc.lln], [4.83, 3.93]);   // 0,0517·175 − 0,0207·50 − 3,18 = 4,8325; LIN = P − 0,90
+  assert.deepEqual([refs.fev1.pred, refs.fev1.lln], [3.87, 3.11]); // 0,0338·175 − 0,0252·50 − 0,789 = 3,866; LIN = P − 0,76
+  assert.deepEqual([refs.ratio.pred, refs.ratio.lln], [79.8, 72.2]); // 120,3 − 0,175·175 − 0,197·50 = 79,825; LIN = P − 7,6
+});
+test('Pereira 2007: mulher 162 cm, 56 anos (coeficiente 0,0441 da tabela original)', () => {
+  const {refs} = brazilSpirometryReferences({sex: 'F', age: 56, height: 162});
+  assert.deepEqual([refs.fvc.pred, refs.fvc.lln], [3.24, 2.6]);
+  assert.deepEqual([refs.fev1.pred, refs.fev1.lln], [2.6, 1.99]);
+  assert.deepEqual([refs.ratio.pred, refs.ratio.lln], [80, 71.5]);
+});
+test('Pereira 2007: fora da faixa da amostra não extrapola', () => {
+  assert.deepEqual(brazilSpirometryReferences({sex: 'M', age: 22, height: 175}).refs, {});
+  assert.deepEqual(brazilSpirometryReferences({sex: 'F', age: 40, height: 190}).refs, {});
+  assert.deepEqual(brazilSpirometryReferences({sex: '', age: 40, height: 160}).refs, {});
+});

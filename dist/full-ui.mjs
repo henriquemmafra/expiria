@@ -1,4 +1,4 @@
-import {analyzeFull,brazilReferences,PARAMETERS} from './full-function.mjs';
+import {analyzeFull,brazilReferences,brazilSpirometryReferences,adjustPredictedDLCOForHb,PARAMETERS} from './full-function.mjs';
 import {interpret as interpretSpirometry} from './clinical.mjs';
 import {chartRows,chartSVG} from './chart.mjs';
 const $=id=>document.getElementById(id);
@@ -46,7 +46,7 @@ for(const [group,keys]of Object.entries(groups)){
    const td=document.createElement('td'),input=document.createElement('input');
    input.id='full-'+group+'-'+key+'-'+col;input.inputMode='decimal';input.placeholder=col==='measured'?'—':'auto / —';
    input.setAttribute('aria-label',PARAMETERS[key][0]+' '+col);input.autocomplete='off';
-   input.addEventListener('input',()=>{input.classList.remove('auto');markEdited();invalidate();});td.append(input);tr.append(td);
+   input.addEventListener('input',()=>{const own=input.classList.contains('calc')||/-measured$/.test(input.id)===false;input.classList.remove('auto','calc');input.title='';if(own)input.dataset.manual='1';fillReferences();markEdited();invalidate();});td.append(input);tr.append(td);
   }tbody.append(tr);
  }
  table.append(tbody);wrap.append(table);section.append(wrap);$('full-tables').append(section);
@@ -64,6 +64,7 @@ function sourceData(){
  for(const [group,keys]of Object.entries(groups))for(const key of keys){
   const row={};
   for(const col of ['measured','pred','lln','uln']){
+   const el=$('full-'+group+'-'+key+'-'+col);if(el&&el.classList.contains('calc'))continue;
    const v=nval('full-'+group+'-'+key+'-'+col);if(v!==null)row[col]=v;
   }
   if(Object.keys(row).length&&!(group==='resistance'&&($('full-resmethod').value==='osc'?groups.resistance.slice(0,4).includes(key):groups.resistance.slice(4).includes(key))))d[group][key]=row;
@@ -89,6 +90,40 @@ function fullAnalysis(){
  },spirometry:interpretSpirometry(spiroData())});
 }
 function markEdited(){$('confirmed').checked=false;$('interpret').disabled=true;}
+// Previsto/LIN/LSN calculados: preenchem só caixas vazias (ou já calculadas), nunca o que veio do exame ou foi digitado.
+const CALC_TITLE='Calculado pelo Expiria a partir de sexo, idade e estatura';
+const shown=(v,dec=2)=>String(Math.round(v*10**dec)/10**dec).replace('.',',');
+function putCalc(input,value,source,dec){
+ if(!input||input.dataset.manual)return 0;
+ const empty=!input.value.trim(),calc=input.classList.contains('calc');
+ if(!empty&&!calc)return 0;
+ if(value==null||!Number.isFinite(value)){if(calc){input.value='';input.classList.remove('auto','calc');input.title='';}return 0;}
+ input.value=shown(value,dec);input.classList.add('auto','calc');input.title=CALC_TITLE+' — '+source;return 1;
+}
+function fillReferences(){
+ const demo=demographics();let spiro=0,supp=0;
+ const sp=brazilSpirometryReferences(demo);
+ for(const key of ['fev1','fvc'])for(const col of ['pred','lln'])spiro+=putCalc($(key+'-'+col),sp.refs[key]?.[col],sp.refs[key]?.source,2);
+ spiro+=putCalc($('ratio-lln'),sp.refs.ratio?.lln,sp.refs.ratio?.source,1);
+ const ratioLln=$('ratio-lln');
+ if(sp.refs.ratio&&(!ratioLln.dataset.pred||ratioLln.dataset.predCalc)){ratioLln.dataset.pred=sp.refs.ratio.pred;ratioLln.dataset.predCalc='1';}
+ else if(!sp.refs.ratio&&ratioLln.dataset.predCalc){delete ratioLln.dataset.pred;delete ratioLln.dataset.predCalc;}
+ const brazil=$('full-reference').value==='brazil',refs=brazil?brazilReferences(demo).refs:{};
+ const si=$('full-dlco-unit').value==='si',hb=$('full-hbmode').value==='predicted';
+ for(const [group,keys]of [['volumes',groups.volumes],['diffusion',groups.diffusion]])for(const key of keys){
+  let ref=group==='volumes'&&$('full-method').value!=='pleth'?null:refs[key];
+  const hasMeasured=nval('full-'+group+'-'+key+'-measured')!==null;
+  if(ref&&key==='dlco'&&hb){const adj=adjustPredictedDLCOForHb(ref,demo.hemoglobin,demo.sex);if(adj)ref=adj;}
+  const k=si&&group==='diffusion'&&key!=='va'?1/2.987:1;
+  for(const col of ['pred','lln','uln']){
+   const v=hasMeasured&&ref&&Number.isFinite(ref[col])?ref[col]*k:null;
+   supp+=putCalc($('full-'+group+'-'+key+'-'+col),v,ref?.source||'',key==='rvtlc'?1:2);
+  }
+ }
+ return {spiro,supp,errors:sp.errors};
+}
+// Edição manual: o valor passa a ser do usuário e não é mais recalculado.
+for(const input of document.querySelectorAll('#values input'))input.addEventListener('input',()=>{input.classList.remove('calc');input.title='';input.dataset.manual='1';});
 function invalidate(){
  const result=fullAnalysis(),s=spiroData();
  $('full-generate').disabled=!$('confirmed').checked||(!result.hasData&&!(s.fev1.pre&&s.fvc.pre));
@@ -166,7 +201,7 @@ const SELECT_DEFAULTS={'full-sex':'','full-reference':'brazil','full-method':'pl
 function setField(id,value){const el=$(id);if(!el||value==null||value==='')return;el.value=String(value);el.classList.add('auto');}
 // Cada texto colado é um exame novo: limpa o anterior e preenche o que foi lido.
 document.addEventListener('expiria:parsed',({detail:p})=>{
- for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto');}
+ for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto','calc');input.title='';delete input.dataset.manual;}
  for(const [id,v]of Object.entries(SELECT_DEFAULTS)){$(id).value=v;$(id).classList.remove('auto');}
  const d=p.demographics||{},st=p.settings||{};
  setField('full-sex',d.sex);setField('full-age',d.age);setField('full-height',d.height);setField('full-weight',d.weight);setField('full-hb',d.hemoglobin);
@@ -176,20 +211,24 @@ document.addEventListener('expiria:parsed',({detail:p})=>{
  for(const group of ['volumes','diffusion','resistance'])for(const [key,row]of Object.entries(p[group]||{}))for(const [col,val]of Object.entries(row)){
   const input=$('full-'+group+'-'+key+'-'+col);if(input){input.value=String(Math.round(val*1000)/1000).replace('.',',');input.classList.add('auto');added++;}
  }
+ const calc=fillReferences();
  for(const section of container.querySelectorAll('.full-details'))if([...section.querySelectorAll('input')].some(x=>x.value))section.open=true;
  showMode();markEdited();invalidate();
+ if(calc.spiro)$('status').textContent+=` Previsto e LIN da espirometria calculados por Pereira 2007 a partir de sexo, idade e estatura (${calc.spiro} campos verdes). Equações de adultos brancos: em adultos negros os previstos são menores (Prata 2018).`;
+ else if(calc.errors.length&&(!$('fev1-lln').value||!$('fvc-lln').value||!$('ratio-lln').value)&&Object.keys(p.spirometry||{}).length)$('status').textContent+=' '+calc.errors[0];
+ if(calc.supp)$('status').textContent+=` Previsto/LIN de volumes e DLCO calculados pelas referências brasileiras (${calc.supp} campos verdes).`;
  $('full-extract-status').textContent=added?added+' campos complementares lidos do texto. Confira valores e unidades no exame original.':'Sem tabelas complementares no texto.';
 });
 $('full-extract').onclick=()=>$('extract').click();
 $('full-extract').textContent='Reler o texto colado';
 for(const id of ['full-sex','full-age','full-height','full-weight','full-hb','full-reference','full-method','full-hbmode','full-dlco-unit','full-resmethod','full-quality']){
- $(id).addEventListener('input',()=>{$(id).classList.remove('auto');showMode();markEdited();invalidate();});
+ $(id).addEventListener('input',()=>{$(id).classList.remove('auto');showMode();fillReferences();markEdited();invalidate();});
 }
 $('confirmed').addEventListener('change',invalidate);
 $('reset').addEventListener('click',()=>{
  // Só reinicializar controles adicionais se o formulário principal tiver sido limpo.
  if($('source').value||$('fev1-pre').value)return;
- for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto');}
+ for(const input of container.querySelectorAll('input')){input.value='';input.classList.remove('auto','calc');input.title='';delete input.dataset.manual;}
  for(const select of container.querySelectorAll('select')){select.selectedIndex=0;select.classList.remove('auto');}
  showMode();invalidate();
 });

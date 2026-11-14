@@ -74,6 +74,30 @@ export function brazilReferences({sex,age,height,weight}={},section='all'){
  }
  return {refs,errors};
 }
+/**
+ * Espirometria: Pereira CAC, Sato T, Rodrigues SC. J Bras Pneumol 2007;33(4):397-406,
+ * tabelas 3 (homens, sem peso) e 4 (mulheres). LIN = previsto − 5º percentil dos resíduos.
+ * Coeficientes conferidos com Pereira 2014 (J Bras Pneumol 40:397); onde divergem
+ * (CVF feminina 0,041 vs 0,0441; LIN da relação feminina 8,3 vs 8,5) prevalece a tabela
+ * original, e 0,0441 é o único coerente com a relação prevista (~80%).
+ * Amostra: adultos brancos não fumantes. Fora das faixas, não extrapolar.
+ */
+export const SPIRO_REFERENCE_SOURCE='Pereira et al. 2007 (J Bras Pneumol 2007;33:397-406), adultos brancos';
+export function brazilSpirometryReferences({sex,age,height}={}){
+ if(!['M','F'].includes(sex)||!positive(age)||!positive(height))return {refs:{},errors:['Informe sexo, idade e estatura para calcular previsto e LIN da espirometria.']};
+ const male=sex==='M',range=male?{age:[26,86],height:[152,192]}:{age:[20,85],height:[137,182]};
+ if(age<range.age[0]||age>range.age[1]||height<range.height[0]||height>range.height[1])
+  return {refs:{},errors:[`Idade ou estatura fora da amostra de Pereira 2007 (${male?'homens':'mulheres'}: ${range.age[0]}–${range.age[1]} anos, ${range.height[0]}–${range.height[1]} cm): previsto e LIN da espirometria não calculados.`]};
+ const h=height,a=age,r2=x=>Math.round(x*100)/100,r1=x=>Math.round(x*10)/10;
+ const c=male?{fvc:[.0517,-.0207,-3.18,.90],fev1:[.0338,-.0252,-.789,.76],ratio:[-.175,-.197,120.3,7.6]}
+             :{fvc:[.0441,-.0189,-2.848,.64],fev1:[.0314,-.0203,-1.353,.61],ratio:[-.140,-.158,111.5,8.5]};
+ const refs={};
+ for(const [key,[ch,ca,k,lo]]of Object.entries(c)){
+  const pred=ch*h+ca*a+k,round=key==='ratio'?r1:r2;
+  refs[key]={pred:round(pred),lln:round(pred-lo),source:SPIRO_REFERENCE_SOURCE};
+ }
+ return {refs,errors:[]};
+}
 export function adjustPredictedDLCOForHb(ref,hb,sex){
  if(!ref||!positive(ref.pred)||!positive(hb)||!['M','F'].includes(sex))return null;
  // ERS/ATS: ajustar o *previsto* à Hb, não ajustar também o medido.
